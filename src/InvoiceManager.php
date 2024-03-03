@@ -175,7 +175,7 @@ class InvoiceManager
             $this->password = $password;
             return $this;
         }
-	    
+
         $response = $this->client->post($this->getBaseUrl() . "/earsiv-services/esign", [
             "form_params" => [
                 "assoscmd" => "kullaniciOner",
@@ -364,6 +364,12 @@ class InvoiceManager
         return $this->invoice;
     }
 
+    public function setInvoices(array $invoices)
+    {
+        $this->invoices = $invoices;
+        return $this;
+    }
+
     /**
      * Getter function for invoices
      *
@@ -431,10 +437,10 @@ class InvoiceManager
               "jp" => '{"baslangic":"' . $startDate . '","bitis":"' . $endDate . ' " }' ];
           $body = $this->sendRequestAndGetBody(self::DISPATCH_PATH, $parameters);
           $this->checkError($body);
- 
+
           // Array tipinden verilen tarih aralığında yer alan faturalar dönüyor
           $this->invoices = $body['data'];
- 
+
           return $body;
       }
 
@@ -492,7 +498,7 @@ class InvoiceManager
         $this->checkError($body);
 
         if ($body["data"] != "Faturanız başarıyla oluşturulmuştur. Düzenlenen Belgeler menüsünden faturanıza ulaşabilirsiniz.") {
-            
+
             $responseData = [
                 'error' => $body['data']
             ];
@@ -509,19 +515,16 @@ class InvoiceManager
      * @param Invoice $invoice
      * @return void
      */
-    public function getInvoiceHTML(Invoice $invoice = null, $signed = true)
+    public function getInvoiceHTML($invoice = null)
     {
-        if ($invoice != null) {
-            $this->invoice = $invoice;
-        }
 
-        if ($this->invoice == null) {
+        if ($invoice == null) {
             throw new NullDataException("Invoice variable not exist");
         }
 
         $data = [
-            "ettn" => $this->invoice->getUuid(),
-            "onayDurumu" => $signed ? "Onaylandı" : "Onaylanmadı"
+            "ettn" => $invoice['ettn'],
+            "onayDurumu" => $invoice['onayDurumu']
         ];
 
         $parameters = [
@@ -759,7 +762,7 @@ class InvoiceManager
      *
      * @return boolean
      */
-     
+
      private function initializeSMSVerification()
      {
         $parameters = [
@@ -775,8 +778,8 @@ class InvoiceManager
 
         return $body["data"]["telefon"];
     }
-    
-    
+
+
     /**
      * Send user informations data
      *
@@ -786,7 +789,7 @@ class InvoiceManager
     public function sendSMSVerification($phoneNumber = null)
     {
         $getPhoneNumber = $this->initializeSMSVerification();
-        
+
         $data = [
             "CEPTEL" => $getPhoneNumber,
             "KCEPTEL" => false,
@@ -839,7 +842,7 @@ class InvoiceManager
         {
             return false;
         }
-        
+
         if($body["data"]["sonuc"] == 0)
         {
             return false;
